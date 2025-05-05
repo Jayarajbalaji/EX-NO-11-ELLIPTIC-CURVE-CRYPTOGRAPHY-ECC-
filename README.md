@@ -24,10 +24,7 @@ To Implement ELLIPTIC CURVE CRYPTOGRAPHY(ECC)
 
 ## Program:
 
-
-
 ## Output:
-
 
 ## Result:
 The program is executed successfully
