@@ -24,39 +24,64 @@ To Implement ELLIPTIC CURVE CRYPTOGRAPHY(ECC)
 
 ## Program:
 ~~~
-from tinyec import registry
-import secrets
+#include <stdio.h>
 
-def generate_public_key(private_key, curve):
-    public_key = private_key * curve.g
-    return public_key
+typedef struct { long long x, y; } Point;
 
-def ecc_diffie_hellman():
-    curve_name = input("Enter the name of the elliptic curve (e.g., 'brainpoolP256r1'): ")
-    curve = registry.get_curve(curve_name)
+long long modInv(long long a, long long m) {
+  long long m0 = m, x0 = 0, x1 = 1, q, t;
+  while (a > 1) {
+    q = a / m; t = m; m = a % m; a = t;
+    t = x0; x0 = x1 - q * x0; x1 = t;
+  }
+  return x1 < 0 ? x1 + m0 : x1;
+}
 
-    private_key_a = int(input("User A, enter your private key (a large integer): "))
-    public_key_a = generate_public_key(private_key_a, curve)
-    print(f"User A's Public Key: ({public_key_a.x}, {public_key_a.y})")
+Point add(Point P, Point Q, long long a, long long p) {
+  Point R; long long λ;
+  if (P.x == Q.x && P.y == Q.y)
+    λ = (3 * P.x * P.x + a) * modInv(2 * P.y, p) % p;
+  else
+    λ = (Q.y - P.y) * modInv(Q.x - P.x, p) % p;
+  R.x = (λ * λ - P.x - Q.x + p) % p;
+  R.y = (λ * (P.x - R.x) - P.y + p) % p;
+  return R;
+}
 
-    private_key_b = int(input("User B, enter your private key (a large integer): "))
-    public_key_b = generate_public_key(private_key_b, curve)
-    print(f"User B's Public Key: ({public_key_b.x}, {public_key_b.y})")
+Point mul(Point P, long long k, long long a, long long p) {
+  Point R = P; k--;
+  while (k--) R = add(R, P, a, p);
+  return R;
+}
 
-    shared_secret_a = private_key_a * public_key_b  # User A's computation
-    shared_secret_b = private_key_b * public_key_a  # User B's computation
-    print(f"\nUser A's Shared Secret: ({shared_secret_a.x}, {shared_secret_a.y})")
-    print(f"User B's Shared Secret: ({shared_secret_b.x}, {shared_secret_b.y})")
+int main() {
+  long long p, a, b, privA, privB;
+  Point G, pubA, pubB, sharedA, sharedB;
 
-    if shared_secret_a == shared_secret_b:
-        print("\nThe shared secret key has been successfully established!")
-    else:
-        print("\nError: The shared secrets do not match.")
+  printf("Enter prime p, curve params a b, base point G (x y), keys a b:\n");
+  scanf("%lld %lld %lld %lld %lld %lld %lld", &p, &a, &b, &G.x, &G.y, &privA, &privB);
 
-ecc_diffie_hellman()
+  pubA = mul(G, privA, a, p);
+  pubB = mul(G, privB, a, p);
+  sharedA = mul(pubB, privA, a, p);
+  sharedB = mul(pubA, privB, a, p);
+
+  printf("Public A: (%lld, %lld)\n", pubA.x, pubA.y);
+  printf("Public B: (%lld, %lld)\n", pubB.x, pubB.y);
+  printf("Shared A: (%lld, %lld)\n", sharedA.x, sharedA.y);
+  printf("Shared B: (%lld, %lld)\n", sharedB.x, sharedB.y);
+
+  if (sharedA.x == sharedB.x && sharedA.y == sharedB.y)
+    printf("Key exchange successful.\n");
+  else
+    printf("Key exchange failed.\n");
+
+  return 0;
+}
 ~~~
-## Output:
-![384790247-1460637e-3806-4d22-a0b3-93207784fc5f](https://github.com/user-attachments/assets/f887c749-29c0-44c8-adc5-027a53c5ddb9)
+## Output):
+![446685852-d266ccb9-3d22-4ec8-bed8-d834431f6b9f](https://github.com/user-attachments/assets/4e43584a-2902-4ac6-b79b-74a8191e4db0)
+
 ## Result:
 The program is executed successfully
 
